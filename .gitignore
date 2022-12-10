@@ -3,5 +3,6 @@
 *.py[cod]
 *.pyc
 *.log
-!.gitignore
+dataset/*
+dataset/*/*
 Pipfile.lock
