@@ -3,5 +3,6 @@
 *.py[cod]
 *.pyc
 *.log
+!dataset
 Pipfile.lock
 dataset/ILSVRC2012_img_val

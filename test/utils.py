@@ -75,6 +75,8 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 ) -> None:
 
     onnx_model, torch_model = get_model(model, batch_size, opset_version)
+    if not DATASETS_DIR.exists():
+        DATASETS_DIR.mkdir()
     root = DATASETS_DIR / "ILSVRC2012_img_val"
     dataloader = create_imagenet_test(root, batch_size, num_workers=4)
     ort_session = ort.InferenceSession(
