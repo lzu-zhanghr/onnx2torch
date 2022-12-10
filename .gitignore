@@ -3,5 +3,5 @@
 *.py[cod]
 *.pyc
 *.log
+!.gitignore
 Pipfile.lock
-dataset/ILSVRC2012_img_val/*
