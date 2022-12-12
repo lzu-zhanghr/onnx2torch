@@ -86,11 +86,9 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
     onnx_top1 = torchmetrics.Accuracy(num_classes=1000)
     onnx_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    onnx_cm = torchmetrics.ConfusionMatrix(num_classes=1000)
 
     torch_top1 = torchmetrics.Accuracy(num_classes=1000)
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    torch_cm = torchmetrics.ConfusionMatrix(num_classes=1000)
 
     mse = torchmetrics.MeanSquaredError()
     err = 0
@@ -108,24 +106,20 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
         onnx_top1.update(onnx_output, target)
         onnx_top5.update(onnx_output, target)
-        onnx_cm.update(onnx_output, target)
 
         torch_top1.update(torch_output, target)
         torch_top5.update(torch_output, target)
-        torch_cm.update(torch_output, target)
 
         mse.update(torch_output, onnx_output)
         err += torch.count_nonzero(torch_output.argmax(1) - onnx_output.argmax(1))
 
-    onnx_top1_acc, onnx_top5_acc, onnx_confusion = (
+    onnx_top1_acc, onnx_top5_acc = (
         onnx_top1.compute(),
         onnx_top5.compute(),
-        onnx_cm.compute(),
     )
-    torch_top1_acc, torch_top5_acc, torch_confusion = (
+    torch_top1_acc, torch_top5_acc = (
         torch_top1.compute(),
         torch_top5.compute(),
-        torch_cm.compute(),
     )
 
     error = mse.compute()
@@ -135,7 +129,4 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
     )
-    if not CM_DIR.exists():
-        CM_DIR.mkdir(parents=True)
-    torch.save(onnx_confusion - torch_confusion, CM_DIR.joinpath(f"{model_name}.pkl"))
     assert onnx_top1_acc == torch_top1_acc and onnx_top5_acc == torch_top5_acc
