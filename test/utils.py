@@ -11,7 +11,7 @@ from onnx2torch.converter import convert
 from torch.utils.data.dataloader import DataLoader
 from torchvision import datasets, transforms
 
-from test import DATASETS_DIR, logger
+from test import DATASETS_DIR, logger, CM_DIR
 
 _IMAGENET_MEAN = (0.485, 0.456, 0.406)
 _IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -86,11 +86,11 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
     onnx_top1 = torchmetrics.Accuracy(num_classes=1000)
     onnx_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    onnx_f1score = torchmetrics.F1Score(num_classes=1000, average="micro")
+    onnx_cm = torchmetrics.ConfusionMatrix(num_classes=1000)
 
     torch_top1 = torchmetrics.Accuracy(num_classes=1000)
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    torch_f1score = torchmetrics.F1Score(num_classes=1000, average="micro")
+    torch_cm = torchmetrics.ConfusionMatrix(num_classes=1000)
 
     mse = torchmetrics.MeanSquaredError()
 
@@ -107,35 +107,32 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
         onnx_top1.update(onnx_output, target)
         onnx_top5.update(onnx_output, target)
-        onnx_f1score.update(onnx_output, target)
+        onnx_cm.update(onnx_output, target)
 
         torch_top1.update(torch_output, target)
         torch_top5.update(torch_output, target)
-        torch_f1score.update(torch_output, target)
+        torch_cm.update(torch_output, target)
 
         mse.update(torch_output, onnx_output)
 
-    onnx_top1_acc, onnx_top5_acc, onnx_f1 = (
+    onnx_top1_acc, onnx_top5_acc, onnx_confusion = (
         onnx_top1.compute(),
         onnx_top5.compute(),
-        onnx_f1score.compute(),
+        onnx_cm.compute(),
     )
-    torch_top1_acc, torch_top5_acc, torch_f1 = (
+    torch_top1_acc, torch_top5_acc, torch_confusion = (
         torch_top1.compute(),
         torch_top5.compute(),
-        torch_f1score.compute(),
+        torch_cm.compute(),
     )
 
     error = mse.compute()
 
     logger.info(
-        f"model:{model_name:20s}; mse: {error:.6f}; "
+        f"model:{model_name:18s}; mse: {error:.2e}; equal_confusion: {onnx_confusion == torch_confusion}; "
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
-        f" onnx_f1score: {onnx_f1:.6f};, torch_f1score: {torch_f1:.6f}; "
     )
-    assert (
-        onnx_top1_acc == torch_top1_acc
-        and onnx_top5_acc == torch_top5_acc
-        and onnx_f1 == torch_f1
-    )
+
+    torch.save(onnx_confusion - torch_confusion, CM_DIR.joinpath(f"{model_name}.pkl"))
+    assert onnx_top1_acc == torch_top1_acc and onnx_top5_acc == torch_top5_acc
