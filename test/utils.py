@@ -126,10 +126,10 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         torch_f1score.compute(),
     )
 
-    mse.compute()
+    error = mse.compute()
 
     logger.info(
-        f"model:{model_name:20s}; mse: {mse:.6f}; "
+        f"model:{model_name:20s}; mse: {error:.6f}; "
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
         f" onnx_f1score: {onnx_f1:.6f};, torch_f1score: {torch_f1:.6f}; "
