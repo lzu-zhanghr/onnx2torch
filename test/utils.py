@@ -85,10 +85,14 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     )
 
     onnx_top1 = torchmetrics.Accuracy(num_classes=1000)
-    torch_top1 = torchmetrics.Accuracy(num_classes=1000)
-
     onnx_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
+    onnx_recall = torchmetrics.Recall(average="micro", num_classes=1000)
+    onnx_precision = torchmetrics.Precision(average="micro", num_classes=1000)
+
+    torch_top1 = torchmetrics.Accuracy(num_classes=1000)
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
+    torch_recall = torchmetrics.Recall(average="micro", num_classes=1000)
+    torch_precision = torchmetrics.Precision(average="micro", num_classes=1000)
 
     for _, (image, target) in enumerate(dataloader):
         onnx_input = {"input": image.detach().cpu().numpy()}
@@ -103,13 +107,33 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
         onnx_top1.update(onnx_output, target)
         onnx_top5.update(onnx_output, target)
+        onnx_recall.update(onnx_output, target)
+        onnx_precision.update(onnx_output, target)
         torch_top1.update(torch_output, target)
         torch_top5.update(torch_output, target)
+        torch_recall.update(torch_output, target)
+        torch_precision.update(torch_output, target)
 
     onnx_top1_acc, onnx_top5_acc = onnx_top1.compute(), onnx_top5.compute()
     torch_top1_acc, torch_top5_acc = torch_top1.compute(), torch_top5.compute()
+    onnx_recall_acc, onnx_precision_acc = (
+        onnx_recall.compute(),
+        onnx_precision.compute(),
+    )
+    torch_recall_acc, torch_precision_acc = (
+        torch_recall.compute(),
+        torch_precision.compute(),
+    )
 
     logger.info(
-        f"model:{model_name:12s}; onnx_top1_acc: {onnx_top1_acc:.6f}, onnx_top5_acc: {onnx_top5_acc:.6f}; torch_top1_acc: {torch_top1_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}"
+        f"model:{model_name:20s}; onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
+        f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
+        f" onnx_recall: {onnx_recall_acc:.6f};, torch_recall: {torch_recall_acc:.6f}; "
+        f" onnx_precision: {onnx_precision_acc:.6f};, torch_precision: {torch_precision_acc:.6f}; "
     )
-    assert onnx_top1_acc == torch_top1_acc and onnx_top5_acc == torch_top5_acc
+    assert (
+        onnx_top1_acc == torch_top1_acc
+        and onnx_top5_acc == torch_top5_acc
+        and onnx_recall_acc == torch_recall_acc
+        and onnx_precision_acc == torch_precision_acc
+    )

@@ -3,5 +3,6 @@
 *.py[cod]
 *.pyc
 *.log
-/dataset
+/dataset/*
+
 Pipfile.lock
