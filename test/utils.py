@@ -133,6 +133,7 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
     )
-
+    if not CM_DIR.exists():
+        CM_DIR.mkdir()
     torch.save(onnx_confusion - torch_confusion, CM_DIR.joinpath(f"{model_name}.pkl"))
     assert onnx_top1_acc == torch_top1_acc and onnx_top5_acc == torch_top5_acc
