@@ -11,7 +11,7 @@ from onnx2torch.converter import convert
 from torch.utils.data.dataloader import DataLoader
 from torchvision import datasets, transforms
 
-from . import DATASETS_DIR, logger
+from test import DATASETS_DIR, logger
 
 _IMAGENET_MEAN = (0.485, 0.456, 0.406)
 _IMAGENET_STD = (0.229, 0.224, 0.225)
@@ -86,13 +86,11 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
     onnx_top1 = torchmetrics.Accuracy(num_classes=1000)
     onnx_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    onnx_recall = torchmetrics.Recall(average="macro", num_classes=1000)
-    onnx_precision = torchmetrics.Precision(average="macro", num_classes=1000)
+    onnx_f1score = torchmetrics.F1Score(num_classes=1000, average="micro")
 
     torch_top1 = torchmetrics.Accuracy(num_classes=1000)
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    torch_recall = torchmetrics.Recall(average="macro", num_classes=1000)
-    torch_precision = torchmetrics.Precision(average="macro", num_classes=1000)
+    torch_f1score = torchmetrics.F1Score(num_classes=1000, average="micro")
 
     for _, (image, target) in enumerate(dataloader):
         onnx_input = {"input": image.detach().cpu().numpy()}
@@ -107,33 +105,30 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
         onnx_top1.update(onnx_output, target)
         onnx_top5.update(onnx_output, target)
-        onnx_recall.update(onnx_output, target)
-        onnx_precision.update(onnx_output, target)
+        onnx_f1score.update(onnx_output, target)
+
         torch_top1.update(torch_output, target)
         torch_top5.update(torch_output, target)
-        torch_recall.update(torch_output, target)
-        torch_precision.update(torch_output, target)
+        torch_f1score.update(torch_output, target)
 
-    onnx_top1_acc, onnx_top5_acc = onnx_top1.compute(), onnx_top5.compute()
-    torch_top1_acc, torch_top5_acc = torch_top1.compute(), torch_top5.compute()
-    onnx_recall_acc, onnx_precision_acc = (
-        onnx_recall.compute(),
-        onnx_precision.compute(),
+    onnx_top1_acc, onnx_top5_acc, onnx_f1 = (
+        onnx_top1.compute(),
+        onnx_top5.compute(),
+        onnx_f1score.compute(),
     )
-    torch_recall_acc, torch_precision_acc = (
-        torch_recall.compute(),
-        torch_precision.compute(),
+    torch_top1_acc, torch_top5_acc, torch_f1 = (
+        torch_top1.compute(),
+        torch_top5.compute(),
+        torch_f1score.compute(),
     )
 
     logger.info(
         f"model:{model_name:20s}; onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
-        f" onnx_recall: {onnx_recall_acc:.6f};, torch_recall: {torch_recall_acc:.6f}; "
-        f" onnx_precision: {onnx_precision_acc:.6f};, torch_precision: {torch_precision_acc:.6f}; "
+        f" onnx_f1score: {onnx_f1:.6f};, torch_f1score: {torch_f1:.6f}; "
     )
     assert (
         onnx_top1_acc == torch_top1_acc
         and onnx_top5_acc == torch_top5_acc
-        and onnx_recall_acc == torch_recall_acc
-        and onnx_precision_acc == torch_precision_acc
+        and onnx_f1 == torch_f1
     )
