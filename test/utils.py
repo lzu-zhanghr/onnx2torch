@@ -92,6 +92,8 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
     torch_f1score = torchmetrics.F1Score(num_classes=1000, average="micro")
 
+    mse = torchmetrics.MeanSquaredError()
+
     for _, (image, target) in enumerate(dataloader):
         onnx_input = {"input": image.detach().cpu().numpy()}
         torch_input = image
@@ -111,6 +113,8 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         torch_top5.update(torch_output, target)
         torch_f1score.update(torch_output, target)
 
+        mse.update(torch_output, onnx_output)
+
     onnx_top1_acc, onnx_top5_acc, onnx_f1 = (
         onnx_top1.compute(),
         onnx_top5.compute(),
@@ -122,8 +126,11 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         torch_f1score.compute(),
     )
 
+    mse.compute()
+
     logger.info(
-        f"model:{model_name:20s}; onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
+        f"model:{model_name:20s}; mse: {mse:.6f}; "
+        f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
         f" onnx_f1score: {onnx_f1:.6f};, torch_f1score: {torch_f1:.6f}; "
     )
