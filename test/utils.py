@@ -11,7 +11,7 @@ from onnx2torch.converter import convert
 from torch.utils.data.dataloader import DataLoader
 from torchvision import datasets, transforms
 
-from test import DATASETS_DIR, logger, CM_DIR
+from test import DATASETS_DIR, logger
 
 _IMAGENET_MEAN = (0.485, 0.456, 0.406)
 _IMAGENET_STD = (0.229, 0.224, 0.225)

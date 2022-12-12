@@ -5,7 +5,6 @@ from loguru import logger
 
 DIR = Path(__file__).parent
 DATASETS_DIR = DIR.parent / "dataset"
-CM_DIR = DIR.parent / "img" / "cm"
 LOG_FILE = DIR / "test_model.log"
 
 
