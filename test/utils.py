@@ -86,13 +86,13 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
 
     onnx_top1 = torchmetrics.Accuracy(num_classes=1000)
     onnx_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    onnx_recall = torchmetrics.Recall(average="micro", num_classes=1000)
-    onnx_precision = torchmetrics.Precision(average="micro", num_classes=1000)
+    onnx_recall = torchmetrics.Recall(average="macro", num_classes=1000)
+    onnx_precision = torchmetrics.Precision(average="macro", num_classes=1000)
 
     torch_top1 = torchmetrics.Accuracy(num_classes=1000)
     torch_top5 = torchmetrics.Accuracy(num_classes=1000, top_k=5)
-    torch_recall = torchmetrics.Recall(average="micro", num_classes=1000)
-    torch_precision = torchmetrics.Precision(average="micro", num_classes=1000)
+    torch_recall = torchmetrics.Recall(average="macro", num_classes=1000)
+    torch_precision = torchmetrics.Precision(average="macro", num_classes=1000)
 
     for _, (image, target) in enumerate(dataloader):
         onnx_input = {"input": image.detach().cpu().numpy()}
