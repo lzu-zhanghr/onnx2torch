@@ -93,6 +93,7 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     torch_cm = torchmetrics.ConfusionMatrix(num_classes=1000)
 
     mse = torchmetrics.MeanSquaredError()
+    err = 0
 
     for _, (image, target) in enumerate(dataloader):
         onnx_input = {"input": image.detach().cpu().numpy()}
@@ -114,6 +115,7 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         torch_cm.update(torch_output, target)
 
         mse.update(torch_output, onnx_output)
+        err += torch.count_nonzero(torch_output.argmax(1) - onnx_output.argmax(1))
 
     onnx_top1_acc, onnx_top5_acc, onnx_confusion = (
         onnx_top1.compute(),
@@ -129,7 +131,7 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     error = mse.compute()
 
     logger.info(
-        f"model:{model_name:18s}; mse: {error:.2e}; "
+        f"model:{model_name:18s}; mse: {error:.2e}; err: {err:5d}; "
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
     )
