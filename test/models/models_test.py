@@ -42,7 +42,7 @@ def test_imagenet_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
     model = getattr(torchvision.models, model_name)(pretrained=True)
-    check_model(model, batch_size=32, model_name=model_name)
+    check_model(model, batch_size=32, model_name=model_name, dataset="imagenet")
 
 
 @pytest.mark.filterwarnings("ignore::torch.jit._trace.TracerWarning")
@@ -67,8 +67,7 @@ def test_imagenet_classification(
 def test_cifar10_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
-    name = "cifar10_".join(model_name)
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", name, pretrained=True)
+    model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_".join(model_name), pretrained=True)
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar10")
 
 
@@ -94,6 +93,5 @@ def test_cifar10_classification(
 def test_cifar100_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
-    name = "cifar10_".join(model_name)
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", name, pretrained=True)
+    model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar100_".join(model_name), pretrained=True)
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar100")
