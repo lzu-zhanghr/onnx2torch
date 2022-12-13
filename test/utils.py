@@ -67,7 +67,7 @@ def create_cifar10_test(  # pylint: disable=missing-function-docstring
     )
 
     dataset = torchvision.datasets.CIFAR10(
-        root, train=False, transform=transform, download=True
+        root, train=False, transform=transform, download=False
     )
     classes: int = 10
     resolution: int = 32
@@ -95,7 +95,7 @@ def create_cifar100_test(  # pylint: disable=missing-function-docstring
     )
 
     dataset = torchvision.datasets.CIFAR10(
-        root, train=False, transform=transform, download=True
+        root, train=False, transform=transform, download=False
     )
     classes: int = 100
     resolution: int = 32
@@ -150,12 +150,12 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
             root, batch_size, num_workers=4
         )
     elif dataset == "cifar10":
-        root = DATASETS_DIR / "Cifar10"
+        root = DATASETS_DIR
         classes, resolution, dataloader = create_cifar10_test(
             root, batch_size, num_workers=4
         )
     else:
-        root = DATASETS_DIR / "Cifar100"
+        root = DATASETS_DIR
         classes, resolution, dataloader = create_cifar100_test(
             root, batch_size, num_workers=4
         )
@@ -208,7 +208,7 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     error = mse.compute()
 
     logger.info(
-        f"dataset:{dataset:8s}; model:{model_name:18s}; mse: {error:.2e}; err: {err:5d}; "
+        f"dataset:{dataset:8s}; model:{model_name:30s}; mse: {error:.2e}; err: {err:5d}; "
         f"onnx_top1_acc: {onnx_top1_acc:.6f},  torch_top1_acc: {torch_top1_acc:.6f}; "
         f" onnx_top5_acc: {onnx_top5_acc:.6f}, torch_top5_acc: {torch_top5_acc:.6f}; "
     )
