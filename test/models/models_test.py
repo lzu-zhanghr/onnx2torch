@@ -50,24 +50,24 @@ def test_imagenet_classification(
 @pytest.mark.parametrize(
     "model_name",
     (
-        "vgg11_bn",
-        "vgg13_bn",
-        "vgg16_bn",
-        "vgg19_bn",
-        "resnet20",
-        "resnet32",
-        "resnet44",
-        "resnet56",
-        "mobilenetv2_x0_5",
-        "mobilenetv2_x0_75",
-        "mobilenetv2_x1_0",
-        "mobilenetv2_x1_4",
+        "cifar10_vgg11_bn",
+        "cifar10_vgg13_bn",
+        "cifar10_vgg16_bn",
+        "cifar10_vgg19_bn",
+        "cifar10_resnet20",
+        "cifar10_resnet32",
+        "cifar10_resnet44",
+        "cifar10_resnet56",
+        "cifar10_mobilenetv2_x0_5",
+        "cifar10_mobilenetv2_x0_75",
+        "cifar10_mobilenetv2_x1_0",
+        "cifar10_mobilenetv2_x1_4",
     ),
 )
 def test_cifar10_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_".join(model_name), pretrained=True)
+    model = torch.hub.load("chenyaofo/pytorch-cifar-models", model_name, pretrained=True)
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar10")
 
 
@@ -76,22 +76,22 @@ def test_cifar10_classification(
 @pytest.mark.parametrize(
     "model_name",
     (
-        "vgg11_bn",
-        "vgg13_bn",
-        "vgg16_bn",
-        "vgg19_bn",
-        "resnet20",
-        "resnet32",
-        "resnet44",
-        "resnet56",
-        "mobilenetv2_x0_5",
-        "mobilenetv2_x0_75",
-        "mobilenetv2_x1_0",
-        "mobilenetv2_x1_4",
+        "cifar100_vgg11_bn",
+        "cifar100_vgg13_bn",
+        "cifar100_vgg16_bn",
+        "cifar100_vgg19_bn",
+        "cifar100_resnet20",
+        "cifar100_resnet32",
+        "cifar100_resnet44",
+        "cifar100_resnet56",
+        "cifar100_mobilenetv2_x0_5",
+        "cifar100_mobilenetv2_x0_75",
+        "cifar100_mobilenetv2_x1_0",
+        "cifar100_mobilenetv2_x1_4",
     ),
 )
 def test_cifar100_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar100_".join(model_name), pretrained=True)
+    model = torch.hub.load("chenyaofo/pytorch-cifar-models", model_name, pretrained=True)
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar100")
