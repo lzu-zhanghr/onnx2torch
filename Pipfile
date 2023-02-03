@@ -13,6 +13,8 @@ protobuf = "==3.19.0"
 onnx = "*"
 torchmetrics = "*"
 loguru = "*"
+scipy = "*"
+tqdm = "*"
 
 [dev-packages]
 

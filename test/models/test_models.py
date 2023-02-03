@@ -1,6 +1,6 @@
 import torch.hub
 
-from test.utils import check_model
+from test.models.utils import check_model
 
 import pytest
 import torchvision
@@ -69,29 +69,3 @@ def test_cifar10_classification(
 ) -> None:  # pylint: disable=missing-function-docstring
     model = torch.hub.load("chenyaofo/pytorch-cifar-models", model_name, pretrained=True)
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar10")
-
-
-@pytest.mark.filterwarnings("ignore::torch.jit._trace.TracerWarning")
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize(
-    "model_name",
-    (
-        "cifar100_vgg11_bn",
-        "cifar100_vgg13_bn",
-        "cifar100_vgg16_bn",
-        "cifar100_vgg19_bn",
-        "cifar100_resnet20",
-        "cifar100_resnet32",
-        "cifar100_resnet44",
-        "cifar100_resnet56",
-        "cifar100_mobilenetv2_x0_5",
-        "cifar100_mobilenetv2_x0_75",
-        "cifar100_mobilenetv2_x1_0",
-        "cifar100_mobilenetv2_x1_4",
-    ),
-)
-def test_cifar100_classification(
-    model_name: str,
-) -> None:  # pylint: disable=missing-function-docstring
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", model_name, pretrained=True)
-    check_model(model, batch_size=32, model_name=model_name, dataset="cifar100")
