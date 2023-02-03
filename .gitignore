@@ -4,5 +4,3 @@
 *.pyc
 *.log
 /dataset/*
-
-Pipfile.lock
