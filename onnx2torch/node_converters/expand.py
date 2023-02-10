@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxExpand',
+    "OnnxExpand",
 ]
 
 import torch
@@ -15,7 +15,9 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxExpand(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-docstring
+class OnnxExpand(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-docstring
     def forward(  # pylint: disable=missing-function-docstring
         self,
         input_tensor: torch.Tensor,
@@ -25,7 +27,9 @@ class OnnxExpand(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disab
             torch.Size(shape), dtype=input_tensor.dtype, device=input_tensor.device
         )
         if torch.onnx.is_in_onnx_export():
-            return _ExpandExportToOnnx.set_forward_and_apply(forward_lambda, input_tensor, shape)
+            return _ExpandExportToOnnx.set_forward_and_apply(
+                forward_lambda, input_tensor, shape
+            )
 
         return forward_lambda()
 
@@ -33,12 +37,14 @@ class OnnxExpand(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disab
 class _ExpandExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('Expand', *args, outputs=1)
+        return graph.op("Expand", *args, outputs=1)
 
 
-@add_converter(operation_type='Expand', version=8)
-@add_converter(operation_type='Expand', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Expand", version=8)
+@add_converter(operation_type="Expand", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxExpand(),
         onnx_mapping=onnx_mapping_from_node(node=node),

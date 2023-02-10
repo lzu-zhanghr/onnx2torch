@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxRoiAlign',
+    "OnnxRoiAlign",
 ]
 
 import torch
@@ -16,17 +16,19 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxRoiAlign(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-class-docstring
+class OnnxRoiAlign(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-class-docstring
     def __init__(
         self,
-        mode: str = 'avg',
+        mode: str = "avg",
         output_height: int = 1,
         output_width: int = 1,
         sampling_ratio: int = 0,
         spatial_scale: float = 1.0,
     ):
         super().__init__()
-        if mode != 'avg':
+        if mode != "avg":
             raise NotImplementedError(f'"{mode}" roi align mode is not implemented.')
 
         self._output_height = output_height
@@ -78,7 +80,7 @@ class _RoiAlignExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-met
         # pylint: disable=unbalanced-tuple-unpacking
         output_height, output_width, sampling_ratio, spatial_scale = args[3:]
         return graph.op(
-            'RoiAlign',
+            "RoiAlign",
             *input_args,
             output_height_i=output_height,
             output_width_i=output_width,
@@ -88,14 +90,16 @@ class _RoiAlignExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-met
         )
 
 
-@add_converter(operation_type='RoiAlign', version=10)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="RoiAlign", version=10)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     node_attributes = node.attributes
-    mode = node_attributes.get('mode', 'avg')
-    output_height = node_attributes.get('output_height', 1)
-    output_width = node_attributes.get('output_width', 1)
-    sampling_ratio = node_attributes.get('sampling_ratio', 0)
-    spatial_scale = node_attributes.get('spatial_scale', 1.0)
+    mode = node_attributes.get("mode", "avg")
+    output_height = node_attributes.get("output_height", 1)
+    output_width = node_attributes.get("output_width", 1)
+    sampling_ratio = node_attributes.get("sampling_ratio", 0)
+    spatial_scale = node_attributes.get("spatial_scale", 1.0)
 
     return OperationConverterResult(
         torch_module=OnnxRoiAlign(

@@ -80,15 +80,6 @@ class ONNXCAM:
             score_saliency_map += score * saliency_map
 
         score_saliency_map = F.relu(torch.from_numpy(score_saliency_map)).numpy()
-        score_saliency_map_min, score_saliency_map_max = (
-            score_saliency_map.min(),
-            score_saliency_map.max(),
-        )
-
-        score_saliency_map = np.divide(
-            score_saliency_map - score_saliency_map_min,
-            score_saliency_map_max - score_saliency_map_min,
-        )
         return score_saliency_map
 
     def __call__(self, x: NDArray, class_idx: int = None) -> NDArray:
@@ -131,7 +122,6 @@ class TorchCAM:
 
         with torch.no_grad():
             for i in tqdm.trange(k):
-
                 # upsampling
                 saliency_map = torch.unsqueeze(activations[:, i, :, :], 1)
                 saliency_map = F.interpolate(
@@ -152,17 +142,6 @@ class TorchCAM:
                 score_saliency_map += score * saliency_map
 
         score_saliency_map = F.relu(score_saliency_map)
-        score_saliency_map_min, score_saliency_map_max = (
-            score_saliency_map.min(),
-            score_saliency_map.max(),
-        )
-
-        score_saliency_map = (
-            (score_saliency_map - score_saliency_map_min)
-            .div(score_saliency_map_max - score_saliency_map_min)
-            .data
-        )
-
         return score_saliency_map.numpy()
 
     def __call__(self, x, class_idx=None) -> NDArray:

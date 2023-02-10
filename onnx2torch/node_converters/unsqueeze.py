@@ -1,6 +1,6 @@
 __all__ = [
-    'OnnxUnsqueezeStaticAxes',
-    'OnnxUnsqueezeDynamicAxes',
+    "OnnxUnsqueezeStaticAxes",
+    "OnnxUnsqueezeDynamicAxes",
 ]
 
 from typing import List
@@ -21,12 +21,16 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxUnsqueezeStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
+class OnnxUnsqueezeStaticAxes(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-class-docstring
     def __init__(self, axes: List[int]):
         super().__init__()
         self.axes = sorted(axes)
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+    def forward(
+        self, input_tensor: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         result = input_tensor
         for axes_id in self.axes:
             result = torch.unsqueeze(result, dim=axes_id)
@@ -51,7 +55,9 @@ class OnnxUnsqueezeDynamicAxes(  # pylint: disable=missing-class-docstring
             return result
 
         if torch.onnx.is_in_onnx_export():
-            return _UnsqueezeExportToOnnx.set_forward_and_apply(_forward, input_tensor, axes)
+            return _UnsqueezeExportToOnnx.set_forward_and_apply(
+                _forward, input_tensor, axes
+            )
 
         return _forward()
 
@@ -59,21 +65,25 @@ class OnnxUnsqueezeDynamicAxes(  # pylint: disable=missing-class-docstring
 class _UnsqueezeExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('Unsqueeze', *args, outputs=1)
+        return graph.op("Unsqueeze", *args, outputs=1)
 
 
-@add_converter(operation_type='Unsqueeze', version=1)
-@add_converter(operation_type='Unsqueeze', version=11)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
-    axes = node.attributes['axes']
+@add_converter(operation_type="Unsqueeze", version=1)
+@add_converter(operation_type="Unsqueeze", version=11)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
+    axes = node.attributes["axes"]
     return OperationConverterResult(
         torch_module=OnnxUnsqueezeStaticAxes(axes=axes),
         onnx_mapping=onnx_mapping_from_node(node),
     )
 
 
-@add_converter(operation_type='Unsqueeze', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Unsqueeze", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     try:
         axes = get_const_value(node.input_values[1], graph)
         axes = axes.tolist()

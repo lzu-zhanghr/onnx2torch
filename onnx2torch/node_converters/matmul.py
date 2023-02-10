@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxMatMul',
+    "OnnxMatMul",
 ]
 
 import torch
@@ -13,15 +13,21 @@ from onnx2torch.utils.common import OperationConverterResult
 from onnx2torch.utils.common import onnx_mapping_from_node
 
 
-class OnnxMatMul(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
-    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+class OnnxMatMul(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-class-docstring
+    def forward(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         return torch.matmul(x, y)
 
 
-@add_converter(operation_type='MatMul', version=1)
-@add_converter(operation_type='MatMul', version=9)
-@add_converter(operation_type='MatMul', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="MatMul", version=1)
+@add_converter(operation_type="MatMul", version=9)
+@add_converter(operation_type="MatMul", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxMatMul(),
         onnx_mapping=onnx_mapping_from_node(node=node),

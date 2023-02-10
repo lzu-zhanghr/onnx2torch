@@ -1,6 +1,6 @@
 __all__ = [
-    'OnnxGather',
-    'OnnxGatherElements',
+    "OnnxGather",
+    "OnnxGatherElements",
 ]
 
 from typing import List
@@ -21,7 +21,9 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxGatherElements(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-docstring
+class OnnxGatherElements(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-docstring
     def __init__(self, axis: int = 0):
         super().__init__()
         self.axis = axis
@@ -63,7 +65,9 @@ class OnnxGather(nn.Module, OnnxToTorchModuleWithCustomExport):
             return input_tensor[slice_for_take]
 
         if torch.onnx.is_in_onnx_export():
-            return _GatherExportToOnnx.set_forward_and_apply(_forward, input_tensor, indices, self.axis)
+            return _GatherExportToOnnx.set_forward_and_apply(
+                _forward, input_tensor, indices, self.axis
+            )
 
         return _forward()
 
@@ -72,14 +76,16 @@ class _GatherExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-metho
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
         input_tensor, indices, axis = args
-        return graph.op('Gather', input_tensor, indices, axis_i=axis, outputs=1)
+        return graph.op("Gather", input_tensor, indices, axis_i=axis, outputs=1)
 
 
-@add_converter(operation_type='Gather', version=1)
-@add_converter(operation_type='Gather', version=11)
-@add_converter(operation_type='Gather', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
-    axis = node.attributes.get('axis', 0)
+@add_converter(operation_type="Gather", version=1)
+@add_converter(operation_type="Gather", version=11)
+@add_converter(operation_type="Gather", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
+    axis = node.attributes.get("axis", 0)
     torch_module = OnnxGather(
         axis=axis,
     )
@@ -90,10 +96,12 @@ def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: 
     )
 
 
-@add_converter(operation_type='GatherElements', version=11)
-@add_converter(operation_type='GatherElements', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
-    axis = node.attributes.get('axis', 0)
+@add_converter(operation_type="GatherElements", version=11)
+@add_converter(operation_type="GatherElements", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
+    axis = node.attributes.get("axis", 0)
     torch_module = OnnxGatherElements(
         axis=axis,
     )

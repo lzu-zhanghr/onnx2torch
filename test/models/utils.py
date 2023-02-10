@@ -78,6 +78,7 @@ def create_cifar10_test(  # pylint: disable=missing-function-docstring
     )
     return classes, resolution, dataloader
 
+
 def get_model(  # pylint: disable=missing-function-docstring,unused-argument
     model: torch.nn.Module,
     batch_size: int,
@@ -110,7 +111,6 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
     model_name: str,
     opset_version: int = 13,
 ) -> None:
-
     if not DATASETS_DIR.exists():
         DATASETS_DIR.mkdir()
     if dataset == "imagenet":
@@ -123,7 +123,6 @@ def check_model(  # pylint: disable=missing-function-docstring,unused-argument
         classes, resolution, dataloader = create_cifar10_test(
             root, batch_size, num_workers=4
         )
-
 
     onnx_model, torch_model = get_model(model, batch_size, resolution, opset_version)
 

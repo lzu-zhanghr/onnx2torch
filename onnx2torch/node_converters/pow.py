@@ -1,6 +1,6 @@
 __all__ = [
-    'OnnxPow',
-    'OnnxSqrt',
+    "OnnxPow",
+    "OnnxSqrt",
 ]
 
 from typing import Optional
@@ -35,29 +35,35 @@ class OnnxPow(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-do
 
 
 class OnnxSqrt(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+    def forward(
+        self, input_tensor: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         return torch.sqrt(input_tensor)
 
 
-@add_converter(operation_type='Pow', version=1)
-@add_converter(operation_type='Pow', version=7)
-@add_converter(operation_type='Pow', version=12)
-@add_converter(operation_type='Pow', version=13)
-@add_converter(operation_type='Pow', version=15)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Pow", version=1)
+@add_converter(operation_type="Pow", version=7)
+@add_converter(operation_type="Pow", version=12)
+@add_converter(operation_type="Pow", version=13)
+@add_converter(operation_type="Pow", version=15)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxPow(
-            broadcast=node.attributes.get('broadcast', None),
-            axis=node.attributes.get('axis', None),
+            broadcast=node.attributes.get("broadcast", None),
+            axis=node.attributes.get("axis", None),
         ),
         onnx_mapping=onnx_mapping_from_node(node=node),
     )
 
 
-@add_converter(operation_type='Sqrt', version=1)
-@add_converter(operation_type='Sqrt', version=6)
-@add_converter(operation_type='Sqrt', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Sqrt", version=1)
+@add_converter(operation_type="Sqrt", version=6)
+@add_converter(operation_type="Sqrt", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxSqrt(),
         onnx_mapping=onnx_mapping_from_node(node=node),

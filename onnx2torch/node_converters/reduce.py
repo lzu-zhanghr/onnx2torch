@@ -1,7 +1,7 @@
 __all__ = [
-    'OnnxReduceSumDynamicAxes',
-    'OnnxReduceSumStaticAxes',
-    'OnnxReduceStaticAxes',
+    "OnnxReduceSumDynamicAxes",
+    "OnnxReduceSumStaticAxes",
+    "OnnxReduceStaticAxes",
 ]
 
 from functools import partial
@@ -70,16 +70,16 @@ def _sum_square(
 
 
 _TORCH_FUNCTION_FROM_ONNX_TYPE = {
-    'ReduceL1': partial(torch.norm, p=1),
-    'ReduceL2': partial(torch.norm, p=2),
-    'ReduceLogSum': _log_sum,
-    'ReduceLogSumExp': _log_sum_exp,
-    'ReduceMax': torch.max,
-    'ReduceMean': torch.mean,
-    'ReduceMin': torch.min,
-    'ReduceProd': torch.prod,
-    'ReduceSum': torch.sum,
-    'ReduceSumSquare': _sum_square,
+    "ReduceL1": partial(torch.norm, p=1),
+    "ReduceL2": partial(torch.norm, p=2),
+    "ReduceLogSum": _log_sum,
+    "ReduceLogSumExp": _log_sum_exp,
+    "ReduceMax": torch.max,
+    "ReduceMean": torch.mean,
+    "ReduceMin": torch.min,
+    "ReduceProd": torch.prod,
+    "ReduceSum": torch.sum,
+    "ReduceSumSquare": _sum_square,
 }
 
 
@@ -132,7 +132,7 @@ class _ReduceSumExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-me
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
         *args, keepdims, noop_with_empty_axes = args
         return graph.op(
-            'ReduceSum',
+            "ReduceSum",
             *args,
             noop_with_empty_axes_i=noop_with_empty_axes,
             keepdims_i=keepdims,
@@ -140,7 +140,9 @@ class _ReduceSumExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-me
         )
 
 
-class OnnxReduceSumStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
+class OnnxReduceSumStaticAxes(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-class-docstring
     def __init__(
         self,
         axes: List[int],
@@ -155,7 +157,9 @@ class OnnxReduceSumStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=
         self.noop_with_empty_axes = noop_with_empty_axes == 1
         self.axes = axes
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+    def forward(
+        self, input_tensor: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         if self.axes is None or len(self.axes) == 0:
             if self.noop_with_empty_axes:
                 return input_tensor
@@ -168,7 +172,9 @@ class OnnxReduceSumStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=
         return torch.sum(input_tensor, dim=self.axes, keepdim=self.keepdims)
 
 
-class OnnxReduceStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
+class OnnxReduceStaticAxes(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-class-docstring
     def __init__(
         self,
         operation_type: str,
@@ -185,15 +191,19 @@ class OnnxReduceStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=mis
         self.keepdims = keepdims == 1
         self.axes = axes
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+    def forward(
+        self, input_tensor: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         if self.axes is None or len(self.axes) == 0:
             if not self.keepdims:
                 return self.math_op_function(input_tensor)
 
             self.axes = list(range(input_tensor.dim()))
 
-        if self.operation_type not in ['ReduceMax', 'ReduceMin', 'ReduceProd']:
-            return self.math_op_function(input_tensor, dim=self.axes, keepdim=self.keepdims)
+        if self.operation_type not in ["ReduceMax", "ReduceMin", "ReduceProd"]:
+            return self.math_op_function(
+                input_tensor, dim=self.axes, keepdim=self.keepdims
+            )
 
         result = input_tensor
         for passed_dims, axis in enumerate(self.axes):
@@ -207,41 +217,43 @@ class OnnxReduceStaticAxes(nn.Module, OnnxToTorchModule):  # pylint: disable=mis
         return result
 
 
-@add_converter(operation_type='ReduceL1', version=1)
-@add_converter(operation_type='ReduceL1', version=11)
-@add_converter(operation_type='ReduceL1', version=13)
-@add_converter(operation_type='ReduceL2', version=1)
-@add_converter(operation_type='ReduceL2', version=11)
-@add_converter(operation_type='ReduceL2', version=13)
-@add_converter(operation_type='ReduceLogSum', version=1)
-@add_converter(operation_type='ReduceLogSum', version=11)
-@add_converter(operation_type='ReduceLogSum', version=13)
-@add_converter(operation_type='ReduceLogSumExp', version=1)
-@add_converter(operation_type='ReduceLogSumExp', version=11)
-@add_converter(operation_type='ReduceLogSumExp', version=13)
-@add_converter(operation_type='ReduceMax', version=1)
-@add_converter(operation_type='ReduceMax', version=11)
-@add_converter(operation_type='ReduceMax', version=12)
-@add_converter(operation_type='ReduceMax', version=13)
-@add_converter(operation_type='ReduceMean', version=1)
-@add_converter(operation_type='ReduceMean', version=11)
-@add_converter(operation_type='ReduceMean', version=13)
-@add_converter(operation_type='ReduceMin', version=1)
-@add_converter(operation_type='ReduceMin', version=11)
-@add_converter(operation_type='ReduceMin', version=12)
-@add_converter(operation_type='ReduceMin', version=13)
-@add_converter(operation_type='ReduceProd', version=1)
-@add_converter(operation_type='ReduceProd', version=11)
-@add_converter(operation_type='ReduceProd', version=13)
-@add_converter(operation_type='ReduceSum', version=1)
-@add_converter(operation_type='ReduceSum', version=11)
-@add_converter(operation_type='ReduceSumSquare', version=1)
-@add_converter(operation_type='ReduceSumSquare', version=11)
-@add_converter(operation_type='ReduceSumSquare', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="ReduceL1", version=1)
+@add_converter(operation_type="ReduceL1", version=11)
+@add_converter(operation_type="ReduceL1", version=13)
+@add_converter(operation_type="ReduceL2", version=1)
+@add_converter(operation_type="ReduceL2", version=11)
+@add_converter(operation_type="ReduceL2", version=13)
+@add_converter(operation_type="ReduceLogSum", version=1)
+@add_converter(operation_type="ReduceLogSum", version=11)
+@add_converter(operation_type="ReduceLogSum", version=13)
+@add_converter(operation_type="ReduceLogSumExp", version=1)
+@add_converter(operation_type="ReduceLogSumExp", version=11)
+@add_converter(operation_type="ReduceLogSumExp", version=13)
+@add_converter(operation_type="ReduceMax", version=1)
+@add_converter(operation_type="ReduceMax", version=11)
+@add_converter(operation_type="ReduceMax", version=12)
+@add_converter(operation_type="ReduceMax", version=13)
+@add_converter(operation_type="ReduceMean", version=1)
+@add_converter(operation_type="ReduceMean", version=11)
+@add_converter(operation_type="ReduceMean", version=13)
+@add_converter(operation_type="ReduceMin", version=1)
+@add_converter(operation_type="ReduceMin", version=11)
+@add_converter(operation_type="ReduceMin", version=12)
+@add_converter(operation_type="ReduceMin", version=13)
+@add_converter(operation_type="ReduceProd", version=1)
+@add_converter(operation_type="ReduceProd", version=11)
+@add_converter(operation_type="ReduceProd", version=13)
+@add_converter(operation_type="ReduceSum", version=1)
+@add_converter(operation_type="ReduceSum", version=11)
+@add_converter(operation_type="ReduceSumSquare", version=1)
+@add_converter(operation_type="ReduceSumSquare", version=11)
+@add_converter(operation_type="ReduceSumSquare", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     node_attributes = node.attributes
-    axes = node_attributes.get('axes', None)
-    keepdims = node_attributes.get('keepdims', 1)
+    axes = node_attributes.get("axes", None)
+    keepdims = node_attributes.get("keepdims", 1)
 
     return OperationConverterResult(
         torch_module=OnnxReduceStaticAxes(
@@ -253,10 +265,12 @@ def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: 
     )
 
 
-@add_converter(operation_type='ReduceSum', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
-    keepdims = node.attributes.get('keepdims', 1)
-    noop_with_empty_axes = node.attributes.get('noop_with_empty_axes', 0)
+@add_converter(operation_type="ReduceSum", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
+    keepdims = node.attributes.get("keepdims", 1)
+    noop_with_empty_axes = node.attributes.get("noop_with_empty_axes", 0)
 
     if len(node.input_values) == 2:
         try:
@@ -277,6 +291,8 @@ def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: 
             pass
 
     return OperationConverterResult(
-        torch_module=OnnxReduceSumDynamicAxes(keepdims=keepdims, noop_with_empty_axes=noop_with_empty_axes),
+        torch_module=OnnxReduceSumDynamicAxes(
+            keepdims=keepdims, noop_with_empty_axes=noop_with_empty_axes
+        ),
         onnx_mapping=onnx_mapping_from_node(node),
     )

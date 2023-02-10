@@ -18,25 +18,26 @@ class OnnxNode:  # pylint: disable=missing-class-docstring
         self._inputs = None
 
         self._proto_attributes = {
-            attribute.name: OnnxNode._parse_attribute_value(attribute) for attribute in self._proto.attribute
+            attribute.name: OnnxNode._parse_attribute_value(attribute)
+            for attribute in self._proto.attribute
         }
 
     @staticmethod
     def _parse_attribute_value(attribute: AttributeProto) -> Any:
-        if attribute.HasField('i'):
+        if attribute.HasField("i"):
             value = attribute.i
-        elif attribute.HasField('f'):
+        elif attribute.HasField("f"):
             value = attribute.f
-        elif attribute.HasField('s'):
-            value = str(attribute.s, 'utf-8')
-        elif attribute.HasField('t'):
+        elif attribute.HasField("s"):
+            value = str(attribute.s, "utf-8")
+        elif attribute.HasField("t"):
             value = OnnxTensor(attribute.t)
         elif attribute.ints:
             value = list(attribute.ints)
         elif attribute.floats:
             value = list(attribute.floats)
         elif attribute.strings:
-            value = [str(s, 'utf-8') for s in attribute.strings]
+            value = [str(s, "utf-8") for s in attribute.strings]
         elif attribute.tensors:
             value = [OnnxTensor(t) for t in attribute.tensors]
         else:
@@ -65,13 +66,19 @@ class OnnxNode:  # pylint: disable=missing-class-docstring
         return self._proto.op_type
 
     @property
-    def input_values(self) -> Tuple[str, ...]:  # pylint: disable=missing-function-docstring
+    def input_values(
+        self,
+    ) -> Tuple[str, ...]:  # pylint: disable=missing-function-docstring
         return self._input_values
 
     @property
-    def output_values(self) -> Tuple[str, ...]:  # pylint: disable=missing-function-docstring
+    def output_values(
+        self,
+    ) -> Tuple[str, ...]:  # pylint: disable=missing-function-docstring
         return self._output_values
 
     @property
-    def attributes(self) -> Mapping[str, Any]:  # pylint: disable=missing-function-docstring
+    def attributes(
+        self,
+    ) -> Mapping[str, Any]:  # pylint: disable=missing-function-docstring
         return MappingProxyType(self._proto_attributes)

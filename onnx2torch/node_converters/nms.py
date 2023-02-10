@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxNonMaxSuppression',
+    "OnnxNonMaxSuppression",
 ]
 
 from typing import Optional
@@ -18,7 +18,9 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxNonMaxSuppression(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-class-docstring
+class OnnxNonMaxSuppression(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-class-docstring
     def __init__(self, center_point_box: bool = False):
         super().__init__()
         self.center_point_box = center_point_box
@@ -50,8 +52,8 @@ class OnnxNonMaxSuppression(nn.Module, OnnxToTorchModuleWithCustomExport):  # py
                 if self.center_point_box:
                     filtered_batch_boxes = torchvision.ops.box_convert(
                         filtered_batch_boxes,
-                        in_fmt='cxcywh',
-                        out_fmt='xyxy',
+                        in_fmt="cxcywh",
+                        out_fmt="xyxy",
                     )
 
                 nms_indexes = torchvision.ops.nms(
@@ -63,7 +65,9 @@ class OnnxNonMaxSuppression(nn.Module, OnnxToTorchModuleWithCustomExport):  # py
                 nms_indexes = nms_indexes[:num_boxes]
                 indexes = confidence_indexes[nms_indexes]
 
-                out.extend([batch_index, class_index, box_index] for box_index in indexes)
+                out.extend(
+                    [batch_index, class_index, box_index] for box_index in indexes
+                )
         if len(out) == 0:
             return torch.empty([0, 3], dtype=torch.int64, device=boxes.device)
 
@@ -104,9 +108,16 @@ class OnnxNonMaxSuppression(nn.Module, OnnxToTorchModuleWithCustomExport):  # py
 class _NmsExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold, center_point_box = args
+        (
+            boxes,
+            scores,
+            max_output_boxes_per_class,
+            iou_threshold,
+            score_threshold,
+            center_point_box,
+        ) = args
         return graph.op(
-            'NonMaxSuppression',
+            "NonMaxSuppression",
             boxes,
             scores,
             max_output_boxes_per_class,
@@ -117,10 +128,14 @@ class _NmsExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
         )
 
 
-@add_converter(operation_type='NonMaxSuppression', version=10)
-@add_converter(operation_type='NonMaxSuppression', version=11)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="NonMaxSuppression", version=10)
+@add_converter(operation_type="NonMaxSuppression", version=11)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
-        torch_module=OnnxNonMaxSuppression(center_point_box=node.attributes.get('center_point_box', 0) == 1),
+        torch_module=OnnxNonMaxSuppression(
+            center_point_box=node.attributes.get("center_point_box", 0) == 1
+        ),
         onnx_mapping=onnx_mapping_from_node(node),
     )

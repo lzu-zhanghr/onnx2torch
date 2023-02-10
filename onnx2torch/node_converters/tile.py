@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxTile',
+    "OnnxTile",
 ]
 
 import torch
@@ -15,7 +15,9 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxTile(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-class-docstring
+class OnnxTile(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-class-docstring
     def forward(  # pylint: disable=missing-function-docstring
         self,
         input_tensor: torch.Tensor,
@@ -24,7 +26,9 @@ class OnnxTile(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable
         # torch.tile(input_tensor, repeats) is not supported for exporting
         forward_lambda = lambda: input_tensor.repeat(torch.Size(repeats))
         if torch.onnx.is_in_onnx_export():
-            return _TileExportToOnnx.set_forward_and_apply(forward_lambda, input_tensor, repeats)
+            return _TileExportToOnnx.set_forward_and_apply(
+                forward_lambda, input_tensor, repeats
+            )
 
         return forward_lambda()
 
@@ -32,13 +36,14 @@ class OnnxTile(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable
 class _TileExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('Tile', *args, outputs=1)
+        return graph.op("Tile", *args, outputs=1)
 
 
-@add_converter(operation_type='Tile', version=6)
-@add_converter(operation_type='Tile', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
-
+@add_converter(operation_type="Tile", version=6)
+@add_converter(operation_type="Tile", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxTile(),
         onnx_mapping=onnx_mapping_from_node(node=node),

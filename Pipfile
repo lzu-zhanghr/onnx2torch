@@ -15,6 +15,8 @@ torchmetrics = "*"
 loguru = "*"
 scipy = "*"
 tqdm = "*"
+matplotlib = "*"
+black = "*"
 
 [dev-packages]
 

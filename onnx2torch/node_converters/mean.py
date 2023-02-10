@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxMean',
+    "OnnxMean",
 ]
 
 import torch
@@ -18,10 +18,14 @@ class OnnxMean(OnnxBaseElementWise):  # pylint: disable=missing-docstring
     def __init__(self):
         super().__init__(_MeanExportToOnnx)
 
-    def apply_reduction(self, *tensors: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+    def apply_reduction(
+        self, *tensors: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
         broadcast_shape = self._broadcast_shape(*tensors)
 
-        output = torch.zeros(broadcast_shape, dtype=tensors[0].dtype, device=tensors[0].device)
+        output = torch.zeros(
+            broadcast_shape, dtype=tensors[0].dtype, device=tensors[0].device
+        )
         for y in tensors:
             output.add_(y)
 
@@ -32,12 +36,14 @@ class OnnxMean(OnnxBaseElementWise):  # pylint: disable=missing-docstring
 class _MeanExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('Mean', *args, outputs=1)
+        return graph.op("Mean", *args, outputs=1)
 
 
-@add_converter(operation_type='Mean', version=8)
-@add_converter(operation_type='Mean', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Mean", version=8)
+@add_converter(operation_type="Mean", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxMean(),
         onnx_mapping=onnx_mapping_from_node(node=node),

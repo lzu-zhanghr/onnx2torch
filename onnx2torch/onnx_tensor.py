@@ -9,12 +9,16 @@ class OnnxTensor:  # pylint: disable=missing-class-docstring
         self._proto = onnx_tensor_proto
 
     @classmethod
-    def from_numpy(cls, array: np.ndarray, name: str = None):  # pylint: disable=missing-function-docstring
+    def from_numpy(
+        cls, array: np.ndarray, name: str = None
+    ):  # pylint: disable=missing-function-docstring
         onnx_tensor_proto = numpy_helper.from_array(array, name=name)
         return cls(onnx_tensor_proto)
 
     @classmethod
-    def from_torch(cls, tensor: torch.Tensor, name: str = None):  # pylint: disable=missing-function-docstring
+    def from_torch(
+        cls, tensor: torch.Tensor, name: str = None
+    ):  # pylint: disable=missing-function-docstring
         array = tensor.detach().cpu().numpy()
         return cls.from_numpy(array, name=name)
 

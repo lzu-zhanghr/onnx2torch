@@ -1,6 +1,6 @@
 __all__ = [
-    'CustomExportToOnnx',
-    'OnnxToTorchModuleWithCustomExport',
+    "CustomExportToOnnx",
+    "OnnxToTorchModuleWithCustomExport",
 ]
 
 from typing import Any
@@ -21,7 +21,9 @@ class OnnxToTorchModuleWithCustomExport(OnnxToTorchModule):
     pass  # pylint: disable=unnecessary-pass
 
 
-class CustomExportToOnnx(torch.autograd.Function):  # pylint: disable=missing-class-docstring
+class CustomExportToOnnx(
+    torch.autograd.Function
+):  # pylint: disable=missing-class-docstring
     _NEXT_FORWARD_FUNCTION: Optional[Callable] = None
 
     @classmethod
@@ -38,16 +40,20 @@ class CustomExportToOnnx(torch.autograd.Function):  # pylint: disable=missing-cl
         **kwargs: Any,
     ) -> Any:
         if CustomExportToOnnx._NEXT_FORWARD_FUNCTION is None:
-            raise RuntimeError('forward function is not set')
+            raise RuntimeError("forward function is not set")
 
         try:
-            return CustomExportToOnnx._NEXT_FORWARD_FUNCTION()  # pylint: disable=not-callable
+            return (
+                CustomExportToOnnx._NEXT_FORWARD_FUNCTION()
+            )  # pylint: disable=not-callable
         finally:
             CustomExportToOnnx._NEXT_FORWARD_FUNCTION = None
 
     @staticmethod
-    def backward(ctx: Any, *grad_outputs: Any) -> Any:  # pylint: disable=unused-argument, missing-function-docstring
-        raise RuntimeError('backward called while converting to onnx')
+    def backward(
+        ctx: Any, *grad_outputs: Any
+    ) -> Any:  # pylint: disable=unused-argument, missing-function-docstring
+        raise RuntimeError("backward called while converting to onnx")
 
     @staticmethod
     def symbolic(  # pylint: disable=unused-argument, missing-function-docstring

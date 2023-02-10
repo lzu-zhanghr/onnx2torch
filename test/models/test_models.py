@@ -67,5 +67,7 @@ def test_imagenet_classification(
 def test_cifar10_classification(
     model_name: str,
 ) -> None:  # pylint: disable=missing-function-docstring
-    model = torch.hub.load("chenyaofo/pytorch-cifar-models", model_name, pretrained=True)
+    model = torch.hub.load(
+        "chenyaofo/pytorch-cifar-models", model_name, pretrained=True
+    )
     check_model(model, batch_size=32, model_name=model_name, dataset="cifar10")

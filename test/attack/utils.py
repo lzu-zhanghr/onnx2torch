@@ -67,10 +67,11 @@ def get_model(  # pylint: disable=missing-function-docstring,unused-argument
 
     return onnx_model, torch_model
 
+
 def zoo_attack_model(
-        model: torch.nn.Module,
-        batch_size: int,
-        model_name:str,
-        targeted: bool,
+    model: torch.nn.Module,
+    batch_size: int,
+    model_name: str,
+    targeted: bool,
 ):
     pass

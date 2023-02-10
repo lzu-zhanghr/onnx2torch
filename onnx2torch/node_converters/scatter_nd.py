@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxScatterND',
+    "OnnxScatterND",
 ]
 
 import torch
@@ -15,7 +15,9 @@ from onnx2torch.utils.custom_export_to_onnx import CustomExportToOnnx
 from onnx2torch.utils.custom_export_to_onnx import OnnxToTorchModuleWithCustomExport
 
 
-class OnnxScatterND(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-class-docstring
+class OnnxScatterND(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-class-docstring
     def forward(  # pylint: disable=missing-function-docstring
         self,
         data: torch.Tensor,
@@ -37,7 +39,9 @@ class OnnxScatterND(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: di
             return output
 
         if torch.onnx.is_in_onnx_export():
-            return _ScatterNDExportToOnnx.set_forward_and_apply(_forward, data, indices, updates)
+            return _ScatterNDExportToOnnx.set_forward_and_apply(
+                _forward, data, indices, updates
+            )
 
         return _forward()
 
@@ -45,12 +49,14 @@ class OnnxScatterND(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: di
 class _ScatterNDExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('ScatterND', *args, outputs=1)
+        return graph.op("ScatterND", *args, outputs=1)
 
 
-@add_converter(operation_type='ScatterND', version=11)
-@add_converter(operation_type='ScatterND', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="ScatterND", version=11)
+@add_converter(operation_type="ScatterND", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxScatterND(),
         onnx_mapping=onnx_mapping_from_node(node=node),

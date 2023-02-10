@@ -1,5 +1,5 @@
 __all__ = [
-    'OnnxSlice',
+    "OnnxSlice",
 ]
 
 from typing import List
@@ -47,8 +47,12 @@ def _get_slices(
 
         slices[axis] = slice(start, end, step)
 
-    pos_axes_slices = list(slices.get(a, slice(None, None)) for a in range(max(axes) + 1))
-    neg_axes_slices = list(slices.get(a, slice(None, None)) for a in range(min(axes), 0))
+    pos_axes_slices = list(
+        slices.get(a, slice(None, None)) for a in range(max(axes) + 1)
+    )
+    neg_axes_slices = list(
+        slices.get(a, slice(None, None)) for a in range(min(axes), 0)
+    )
 
     if neg_axes_slices:
         neg_axes_slices = [Ellipsis] + neg_axes_slices
@@ -56,7 +60,9 @@ def _get_slices(
     return flip_dims, pos_axes_slices, neg_axes_slices
 
 
-def _do_slice(x: torch.Tensor, flip_dims: List, pos_axes_slices: List, neg_axes_slices: List):
+def _do_slice(
+    x: torch.Tensor, flip_dims: List, pos_axes_slices: List, neg_axes_slices: List
+):
     if flip_dims:
         x = torch.flip(x, dims=flip_dims)
 
@@ -69,16 +75,28 @@ def _do_slice(x: torch.Tensor, flip_dims: List, pos_axes_slices: List, neg_axes_
     return x
 
 
-class OnnxSliceV9(nn.Module, OnnxToTorchModule):  # pylint: disable=missing-class-docstring
-    def __init__(self, starts: np.ndarray, ends: np.ndarray, axes: Optional[np.ndarray] = None):
+class OnnxSliceV9(
+    nn.Module, OnnxToTorchModule
+):  # pylint: disable=missing-class-docstring
+    def __init__(
+        self, starts: np.ndarray, ends: np.ndarray, axes: Optional[np.ndarray] = None
+    ):
         super().__init__()
-        self._flip_dims, self._pos_axes_slices, self._neg_axes_slices = _get_slices(starts, ends, axes, None)
+        self._flip_dims, self._pos_axes_slices, self._neg_axes_slices = _get_slices(
+            starts, ends, axes, None
+        )
 
-    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:  # pylint: disable=missing-function-docstring
-        return _do_slice(input_tensor, self.flip_dims, self.pos_axes_slices, self.neg_axes_slices)
+    def forward(
+        self, input_tensor: torch.Tensor
+    ) -> torch.Tensor:  # pylint: disable=missing-function-docstring
+        return _do_slice(
+            input_tensor, self.flip_dims, self.pos_axes_slices, self.neg_axes_slices
+        )
 
 
-class OnnxSlice(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disable=missing-class-docstring
+class OnnxSlice(
+    nn.Module, OnnxToTorchModuleWithCustomExport
+):  # pylint: disable=missing-class-docstring
     def forward(  # pylint: disable=missing-function-docstring
         self,
         input_tensor: torch.Tensor,
@@ -88,7 +106,9 @@ class OnnxSlice(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disabl
         steps: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         def _forward():
-            flip_dims, pos_axes_slices, neg_axes_slices = _get_slices(starts, ends, axes, steps)
+            flip_dims, pos_axes_slices, neg_axes_slices = _get_slices(
+                starts, ends, axes, steps
+            )
             return _do_slice(input_tensor, flip_dims, pos_axes_slices, neg_axes_slices)
 
         if torch.onnx.is_in_onnx_export():
@@ -106,26 +126,30 @@ class OnnxSlice(nn.Module, OnnxToTorchModuleWithCustomExport):  # pylint: disabl
 class _SliceExportToOnnx(CustomExportToOnnx):  # pylint: disable=abstract-method
     @staticmethod
     def symbolic(graph: torch_C.Graph, *args) -> torch_C.Value:
-        return graph.op('Slice', *args, outputs=1)
+        return graph.op("Slice", *args, outputs=1)
 
 
-@add_converter(operation_type='Slice', version=9)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Slice", version=9)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     node_attributes = node.attributes
     return OperationConverterResult(
         torch_module=OnnxSliceV9(
-            starts=node_attributes['starts'],
-            ends=node_attributes['ends'],
-            axes=node_attributes.get('axes', None),
+            starts=node_attributes["starts"],
+            ends=node_attributes["ends"],
+            axes=node_attributes.get("axes", None),
         ),
         onnx_mapping=onnx_mapping_from_node(node),
     )
 
 
-@add_converter(operation_type='Slice', version=10)
-@add_converter(operation_type='Slice', version=11)
-@add_converter(operation_type='Slice', version=13)
-def _(node: OnnxNode, graph: OnnxGraph) -> OperationConverterResult:  # pylint: disable=unused-argument
+@add_converter(operation_type="Slice", version=10)
+@add_converter(operation_type="Slice", version=11)
+@add_converter(operation_type="Slice", version=13)
+def _(
+    node: OnnxNode, graph: OnnxGraph
+) -> OperationConverterResult:  # pylint: disable=unused-argument
     return OperationConverterResult(
         torch_module=OnnxSlice(),
         onnx_mapping=onnx_mapping_from_node(node),
