@@ -2,7 +2,6 @@ import io
 from typing import Any, Union
 
 import numpy as np
-from numpy.typing import NDArray
 import onnx
 from test.attack.method import RayS
 import onnxruntime as ort
@@ -140,18 +139,17 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
     batch_size: int,
     model_name: str,
     num: int = 10000,
+    norm: str = "linf",
     onnx: bool = True,
     query: int = 10000,
     epsilon: float = 0.05,
     targeted: bool = True,
     opset_version: int = 13,
     early_stopping: bool = True,
-    resolution: int =224,
+    resolution: int = 224,
 ) -> None:
     root = DATASETS_DIR / "ILSVRC2012_img_val"
-    dataloader = create_imagenet_test(
-        root, batch_size, num_workers=4
-    )
+    dataloader = create_imagenet_test(root, batch_size, num_workers=4)
 
     onnx_model, torch_model = get_model(model, batch_size, resolution, opset_version)
     onnx_net = Network(
@@ -162,56 +160,46 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
     )
     net = onnx_net if onnx else torch_net
 
-    attack = RayS(net, epsilon=epsilon, early_stopping=early_stopping)
+    order = 2 if norm == "l2" else np.inf
+
+    attack = RayS(net, epsilon=epsilon, order=order)
 
     advs = []
-    stop_dists = []
-    stop_queries = []
-    asr = []
 
-    np.random.seed(0)
-    seeds = np.random.randint(query, size=10000)
+    adbds = []
+
     count = 0
     for i, (x, y) in enumerate(dataloader):
-        if count == num:
+        if count >= num:
             break
 
         if net.predict_label(x) != y:
             continue
 
-        np.random.seed(seeds[i])
+        if targeted:
 
-        target = (
-            np.random.randint(net.n_class) * torch.ones(y.shape, dtype=torch.long)
-            if targeted
-            else None
-        )
-        while target and torch.sum(target == y) > 0:
-            target = np.random.randint(net.n_class) * torch.ones(
-                y.shape, dtype=torch.long
+            target = (
+                np.random.randint(net.n_class) * torch.ones(y.shape, dtype=torch.long)
+                if targeted
+                else None
             )
-        adv, queries, dist, succ = attack(
-            x, y, target=target, seed=seeds[i], query_limit=query
+        else:
+            target = None
+
+        adv_b, queries_b, adbd_b, succ_b = attack(
+            x, y, target=target, query_limit=query
         )
-        advs.append(adv.numpy().squeeze())
 
-        if succ:
-            stop_queries.append(queries)
-            if dist.item() < np.inf:
-                stop_dists.append(dist.item())
-        elif early_stopping == False:
-            if dist.item() < np.inf:
-                stop_dists.append(dist.item())
+        advs.extend(adv.numpy() for adv in adv_b)
 
-        asr.append(succ.item())
+        count += x.shape[0]
+        adbds.extend([adbd.numpy() for adbd in adbd_b])
 
-        count += 1
-
-        logger.info(
-            f"model: {model_name:30s}; ADBD: {np.mean(np.array(stop_dists)):.6f};"
-        )
-        np.save(
-            DATASETS_DIR.parent
-            / (model_name + "_" + ("onnx" if onnx else "torch") + "advs.npy"),
-            np.stack(advs)
-        )
+    logger.info(
+        f"model: {model_name:30s}; ADBD: {np.mean(np.array(adbds), axis=0):.6f};"
+    )
+    np.save(
+        DATASETS_DIR.parent
+        / (model_name + "_" + ("onnx" if onnx else "torch") + "advs.npy"),
+        np.stack(advs),
+    )
