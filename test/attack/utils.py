@@ -76,7 +76,6 @@ class Network(nn.Module):
     def __init__(self, model, n_class=10, im_mean=None, im_std=None):
         super(Network, self).__init__()
         self.model = model
-        self.model.eval()
         self.num_queries = 0
         self.im_mean = im_mean
         self.im_std = im_std
@@ -110,13 +109,11 @@ class Network(nn.Module):
         if self.im_mean is not None and self.im_std is not None:
             im_mean = (
                 torch.tensor(self.im_mean)
-                .cuda()
                 .view(1, processed.shape[1], 1, 1)
                 .repeat(processed.shape[0], 1, 1, 1)
             )
             im_std = (
                 torch.tensor(self.im_std)
-                .cuda()
                 .view(1, processed.shape[1], 1, 1)
                 .repeat(processed.shape[0], 1, 1, 1)
             )
@@ -149,9 +146,10 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
     targeted: bool = True,
     opset_version: int = 13,
     early_stopping: bool = True,
+    resolution: int =224,
 ) -> None:
     root = DATASETS_DIR / "ILSVRC2012_img_val"
-    classes, resolution, dataloader = create_imagenet_test(
+    dataloader = create_imagenet_test(
         root, batch_size, num_workers=4
     )
 
@@ -172,7 +170,7 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
     asr = []
 
     np.random.seed(0)
-    seeds = np.random.randint(10000, size=10000)
+    seeds = np.random.randint(query, size=10000)
     count = 0
     for i, (x, y) in enumerate(dataloader):
         if count == num:
@@ -195,8 +193,7 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
         adv, queries, dist, succ = attack(
             x, y, target=target, seed=seeds[i], query_limit=query
         )
-
-        advs.append(adv.item())
+        advs.append(adv.numpy().squeeze())
 
         if succ:
             stop_queries.append(queries)
@@ -216,5 +213,5 @@ def gen_advs(  # pylint: disable=missing-function-docstring,unused-argument
         np.save(
             DATASETS_DIR.parent
             / (model_name + "_" + ("onnx" if onnx else "torch") + "advs.npy"),
-            np.array(advs),
+            np.stack(advs)
         )

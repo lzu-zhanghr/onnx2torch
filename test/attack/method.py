@@ -30,7 +30,7 @@ class RayS:
 
         self.queries = 0
         self.d_t = np.inf
-        self.sgn_t = torch.sign(torch.ones(shape)).cuda()
+        self.sgn_t = torch.sign(torch.ones(shape))
         self.x_final = self.get_xadv(x, self.sgn_t, self.d_t)
         dist = torch.tensor(np.inf)
         block_level = 0
@@ -61,16 +61,8 @@ class RayS:
                 print("out of queries")
                 break
 
-            if i % 10 == 0:
-                print(
-                    "Iter %3d d_t %.8f dist %.8f queries %d"
-                    % (i + 1, self.d_t, dist, self.queries)
-                )
 
-        print(
-            "Iter %3d d_t %.6f dist %.6f queries %d"
-            % (i + 1, self.d_t, dist, self.queries)
-        )
+
         return self.x_final, self.queries, dist, (dist <= self.epsilon).float()
 
     def search_succ(self, x, y, target):
